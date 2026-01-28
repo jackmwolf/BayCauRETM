@@ -36,7 +36,7 @@ Intended users include statisticians, epidemiologists, and health-services resea
 
 # Statement of need
 
-Standard software for time-to-event and recurrent-event data remains useful descriptively but generally does not target causal estimands while addressing complexities (1)-(4) above [@ghoshlin2002; @schaubel2010; @janvin2024]. @Oganisian2024 developed Bayesian statistical methods that accommodate these complexities and conducted a thorough simulation-based validation of these methods. However, due to the focus on methodological development and validation, only proof-of-concept replication code was provided along with the paper. There is need for user-friendly, off-the-shelf software with readable help files that can implement the methods developed in @Oganisian2024.`BayCauRETM` fills this methodological and practical gap by operationalizing the Bayesian approach in `R`. Its syntax is familiar to base-R users and mirrors standard regression functions such as `lm()` and `glm`, with extensive help pages accessible via `help()`. Thus, `BayCauRETM` provides the first user-friendly software for analyzing complex recurrent-event data while handling complexities (1)-(4) described in the Summary section above.
+Standard software for time-to-event and recurrent-event data remains useful descriptively but generally does not target causal estimands while addressing complexities (1)-(4) above [@ghoshlin2002; @schaubel2010; @janvin2024]. @Oganisian2024 developed Bayesian statistical methods that accommodate these complexities and conducted a thorough simulation-based validation of these methods. However, due to the focus on methodological development and validation, only proof-of-concept replication code was provided along with the paper. There is need for user-friendly, off-the-shelf software with readable help files that can implement the methods developed in @Oganisian2024. `BayCauRETM` fills this methodological and practical gap by operationalizing the Bayesian approach in `R`. Its syntax is familiar to base-R users and mirrors standard regression functions such as `lm()` and `glm`, with extensive help pages accessible via `help()`. Thus, `BayCauRETM` provides the first user-friendly software for analyzing complex recurrent-event data while handling complexities (1)-(4) described in the Summary section above.
 
 # Data structure, model, and outputs 
 
@@ -83,9 +83,9 @@ The time-varying intercepts $\{\beta_{0k}\}$ and $\{\theta_{0k}\}$ parameterize 
 
 ### Posterior inference and g-computation
 
-`BayCauRETM` conducts full posterior inference for the models and back-ends to Stan [@Stan2017] via the `rstan` package since the posterior is not available in closed form. Stan is a probabilistic programming language (PPL) that implements cutting edge Hamiltonian Monte Carlo methods to obtain these draws.
+`BayCauRETM` conducts full posterior inference for the models and back-ends to Stan [@Stan2017] via the `rstan` package since the posterior is not available in closed form. Stan is a probabilistic programming language (PPL) that implements cutting edge Hamiltonian Monte Carlo methods to obtain posterior draws.
 
-Using a given draw of the model parameters obtained via Stan. For each parameter draw, `BayCauRETM` simulate the joint death-recurrent process under $a(s)$ and $a(s')$ to obtain a posterior draw of $\Delta(s, s')$. Reporting over many draws yields posterior samples of $\Delta(s, s')$, as described by @Oganisian2024. The posterior mean and the 95% credible interval (2.5th and 97.5th percentiles) are reported.
+For each parameter draw obtained from Stan, `BayCauRETM` simulates the joint death-recurrent process under $a(s)$ and $a(s')$ to obtain a posterior draw of $\Delta(s, s')$. Reporting over many draws yields posterior samples of $\Delta(s, s')$, as described by @Oganisian2024. The posterior mean and the 95% credible interval (2.5th and 97.5th percentiles) are reported.
 
 Detailed usage and example results are available on [GitHub](https://github.com/LnnnnYW/BayCauRETM) (see the [demo PDF](https://github.com/LnnnnYW/BayCauRETM/blob/master/inst/demo_code/demo.pdf)).
 
