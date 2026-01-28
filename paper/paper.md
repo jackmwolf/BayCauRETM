@@ -52,10 +52,10 @@ Required `data.frame` variables are: subject ID, interval index $k$, treatment i
 
 Each row contains a monotone death indicator at the start of interval $k$, $T_k$, a monotone treatment indicator by the end of interval $k$, $A_k$, the interval count $Y_k$ and baseline covariates $L\in\mathcal{L}$.
 
-Let $a(s)=(\underbrace{0,\dots,0}_{s-1},1,\dots,1)$ be the strategy that initiates treatment at interval $s\in\{1,2,\dots, K+1\}$. Define potential outcomes $T_k^{a(s)}$ and $Y_k^{a(s)}$. The target is the difference in average potential incidence rates over follow-up under two initiation times:
+Let $a(s)=(\underbrace{0,\dots,0}_{s-1},1,\dots,1)$ be the strategy that initiates treatment at interval $s\in\{1,2,\dots, K+1\}$. Define $T_k^{a(s)}$ as the potential death indicator for the subject following sequence $a(a)$ up to $k$  and $Y_k^{a(s)}$ as potential number of events in interval $k$. The target is the difference in average potential incidence rates over follow-up under two initiation times:
 
 $$
-\Delta(s,s')=\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a(s)}}{K-\sum_{k=1}^K T_k^{a(s)}}\right]-\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a^{(s')}}}{K-\sum_{k=1}^K T_k^{a^{(s')}}}\right]
+\Delta(s,s')=\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a(s)}}{K-\sum_{k=1}^K T_k^{a(s)}}\right]-\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a{(s')}}}{K-\sum_{k=1}^K T_k^{a{(s')}}}\right]
 $$
 
 The package runs a pair of discrete-time models conditional on shared treatment and covariate terms:
@@ -68,14 +68,16 @@ $$\lambda_k(a_k,\bar y_{k-1},l)=\Pr\!\big(T_k=1\mid T_{k-1}=0,\,a_k,\bar y_{k-1}
 
 $$ f(y_k\mid a_k,\bar y_{k-1},l)=\Pr\!\big(Y_k=y_k\mid T_k=0,\,a_k,\bar y_{k-1},l\big) $$
 
-Here, $f(y_k\mid a_k,\bar y_{k-1},\ell)$ represents the Poisson probability mass function with conditional mean/intensity of the event-count $\mu_k(a_k, \bar y_{k-1}, l) = E[Y_k\mid A_k,\bar Y_{k-1},L]$. Together, these two models multiply to form a joint model for the terminal and recurrent event occurrence at a given interval.
+Here, we use overbar notation to denote process history, e.g. $\bar Y_{k-1}=(Y_1,Y_2,\dots,Y_{k-1})$. $f(y_k\mid a_k,\bar y_{k-1},\ell)$ represents the Poisson probability mass function with conditional mean/intensity of the event-count $\mu_k(a_k, \bar y_{k-1}, l) = E[Y_k\mid A_k,\bar Y_{k-1},L]$. Together, these two models multiply to form a joint model for the terminal and recurrent event occurrence at a given interval.
 
 The functions in `BayCauRETM` implement the following models for the hazard and intensity, respectively:
 
-\begin{align*}
-\text{logit}\,\lambda_k(a_k,\bar y_{k-1},l)&=\beta_{0k}+l^\top\beta_L+y_{k-1}\beta_Y+\beta_A a_k\\
-\log \mu_k(a_k, \bar y_{k-1}, l)&=\theta_{0k}+l^\top\theta_L+y_{k-1}\theta_Y+\theta_A a_k,
-\end{align*}
+$$
+\begin{aligned}
+\text{logit}\,\lambda_k(a_k,\bar y_{k-1},l)=\beta_{0k}+l^\top\beta_L+y_{k-1}\beta_Y+\beta_A a_k, \\
+\log \mu_k(a_k, \bar y_{k-1}, l)=\theta_{0k}+l^\top\theta_L+y_{k-1}\theta_Y+\theta_A a_k,
+\end{aligned}
+$$
 
 The time-varying intercepts $\{\beta_{0k}\}$ and $\{\theta_{0k}\}$ parameterize the baseline hazard and event intensity, respectively. They are assigned a first-order autoregressive (AR1) smoothing prior. See @Oganisian2024 for more details.
 
