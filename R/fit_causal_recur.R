@@ -132,9 +132,16 @@ fit_causal_recur <- function(
   if (!(is.logical(verbose) && length(verbose) == 1)) stop("verbose must be TRUE or FALSE")
   if (!(is.null(lag_col) || (is.character(lag_col) && length(lag_col) == 1))) stop("lag_col must be NULL or a single character string")
 
-  need_cols <- c(id_col, time_col, treat_col)
+  #include columns that are in the formulas
+  formalas_cols <- unique(c(
+    all.vars(formula_T),
+    all.vars(formula_Y)
+  ))
+
+  need_cols <- c(id_col, time_col, treat_col, formalas_cols)
   if (any(miss <- !need_cols %in% names(data)))
     stop("Columns not found: ", paste(need_cols[miss], collapse = ", "))
+
 
   event_col <- all.vars(formula_T)[1]   # Tk
   count_col <- all.vars(formula_Y)[1]   # Yk

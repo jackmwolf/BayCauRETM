@@ -282,7 +282,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "ID column 'id' not found")
+  ), "Columns not found: id")
 })
 
 test_that("fit_causal_recur missing required columns", {
@@ -299,7 +299,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Time column 'k_fac' not found")
+  ), "Columns not found: k_fac")
 })
 
 test_that("fit_causal_recur missing required columns", {
@@ -316,7 +316,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Treatment column 'Ak' not found")
+  ), "Columns not found: Ak")
 })
 
 test_that("fit_causal_recur missing required columns", {
@@ -367,7 +367,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Count column 'Yk' not found")
+  ), "Columns not found: Yk")
 })
 
 test_that("fit_causal_recur missing required columns", {
@@ -384,7 +384,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Covariate 'L.1' not found in data")
+  ), "Columns not found: L.1")
 })
 
 test_that("fit_causal_recur missing required columns", {
@@ -401,7 +401,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Covariate 'L.2' not found in data")
+  ), "Columns not found: L.2")
 })
 
 fit <- fit_causal_recur(
