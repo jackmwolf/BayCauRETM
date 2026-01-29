@@ -350,7 +350,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Event column 'Tk' not found")
+  ), "Columns not found: Tk")
 })
 
 test_that("fit_causal_recur missing required columns", {
