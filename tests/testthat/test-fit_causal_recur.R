@@ -269,6 +269,74 @@ test_that("fit_causal_recur wrong type of input", {
 
 #columns missing
 test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-id)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "ID column 'id' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-k_fac)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Time column 'k_fac' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-Ak)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Treatment column 'Ak' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-lagYk)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Lag column 'lagYk' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
   df2 <- df %>% select(-Tk)
   expect_error(fit_causal_recur(
     data      = df2,
@@ -283,6 +351,57 @@ test_that("fit_causal_recur missing required columns", {
     iter      = 500,
     verbose   = TRUE
   ), "Event column 'Tk' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-Yk)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Count column 'Yk' not found")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-L.1)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Covariate 'L.1' not found in data")
+})
+
+test_that("fit_causal_recur missing required columns", {
+  df2 <- df %>% select(-L.2)
+  expect_error(fit_causal_recur(
+    data      = df2,
+    K         = K,
+    id_col    = "id",
+    time_col  = "k_fac",
+    treat_col = "Ak",
+    lag_col   = "lagYk",
+    formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+    cores     = 1,
+    iter      = 500,
+    verbose   = TRUE
+  ), "Covariate 'L.2' not found in data")
 })
 
 fit <- fit_causal_recur(
