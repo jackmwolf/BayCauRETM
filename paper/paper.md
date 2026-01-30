@@ -48,34 +48,53 @@ The package expects longitudinal data in long, person-interval format. For follo
 
 Required `data.frame` variables are: subject ID, interval index $k$, treatment indicator (0 until the initiation interval, then 1), interval-specific count of recurrent events, and a terminal-event indicator (0 up to death, 1 thereafter). Optional variables include baseline covariates and lagged history (e.g., one-interval lag of the event count). 
 
-### Model specification
-
 Each row contains a monotone death indicator at the start of interval $k$, $T_k$, a monotone treatment indicator by the end of interval $k$, $A_k$, the interval count $Y_k$ and baseline covariates $L\in\mathcal{L}$.
 
-Let $a(s)=(\underbrace{0,\dots,0}_{s-1},1,\dots,1)$ be the strategy that initiates treatment at interval $s\in\{1,2,\dots, K+1\}$. Define $T_k^{a(s)}$ as the potential death indicator for the subject following sequence $a(a)$ up to $k$  and $Y_k^{a(s)}$ as potential number of events in interval $k$. The target is the difference in average potential incidence rates over follow-up under two initiation times:
+### Causal estimand and potential outcomes
+Let $a(s)=(\underbrace{0,\dots,0}_{s-1},1,\dots,1)$ be the strategy that initiates treatment at interval $s\in\{1,2,\dots, K+1\}$. Let $T_k^{a(s)}$ and $Y_k^{a(s)}$ denote, respectively, the death indicator and number of recurrent events that would have been observed in interval $k$ under strategy $a(s)$. Formally, $T_k^{a(s)}$ is the potential death indicator following sequence $a(s)$ up to interval $k$, and $Y_k^{a(s)}$ is the corresponding potential number of events.
+
+The target is the difference in average potential incidence rates over follow-up under two initiation times:
 
 $$
-\Delta(s,s')=\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a(s)}}{K-\sum_{k=1}^K T_k^{a(s)}}\right]-\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a{(s')}}}{K-\sum_{k=1}^K T_k^{a{(s')}}}\right]
+\Delta(s,s')=\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a(s)}}{K-\sum_{k=1}^K T_k^{a(s)}}\right]
+-
+\mathbb{E}\left[\frac{\sum_{k=1}^K Y_k^{a(s')}}{K-\sum_{k=1}^K T_k^{a(s')}}\right].
 $$
 
-The package runs a pair of discrete-time models conditional on shared treatment and covariate terms:
 
-1.  Discrete-time hazard model for the terminal event that models death at a given interval conditional on survival up to that interval:
+### Model specification
 
-$$\lambda_k(a_k,\bar y_{k-1},l)=\Pr\!\big(T_k=1\mid T_{k-1}=0,\,a_k,\bar y_{k-1}, l \big)$$ 
+The package runs a pair of discrete-time models conditional on shared treatment and covariate terms.
 
-2.  Distribution for the number of event occurrences in a given interval conditional on survival through that interval:
+Here and throughout, we use overbar notation to denote the full history of the recurrent event process up to the previous interval, i.e.,
+$\bar Y_{k-1} = (Y_1, Y_2, \dots, Y_{k-1})$.
 
-$$ f(y_k\mid a_k,\bar y_{k-1},l)=\Pr\!\big(Y_k=y_k\mid T_k=0,\,a_k,\bar y_{k-1},l\big) $$
+1. Discrete-time hazard model for the terminal event that models death at a given interval conditional on survival up to that interval:
+$$
+\lambda_k(a_k,\bar Y_{k-1},l)
+=
+\Pr\!\big(T_k=1 \mid T_{k-1}=0,\, a_k, \bar Y_{k-1}, l \big).
+$$
 
-Here, we use overbar notation to denote process history, e.g. $\bar Y_{k-1}=(Y_1,Y_2,\dots,Y_{k-1})$. $f(y_k\mid a_k,\bar y_{k-1},\ell)$ represents the Poisson probability mass function with conditional mean/intensity of the event-count $\mu_k(a_k, \bar y_{k-1}, l) = E[Y_k\mid A_k,\bar Y_{k-1},L]$. Together, these two models multiply to form a joint model for the terminal and recurrent event occurrence at a given interval.
+2. Distribution for the number of event occurrences in a given interval conditional on survival through that interval:
+$$
+f(y_k \mid a_k,\bar Y_{k-1},l)
+=
+\Pr\!\big(Y_k = y_k \mid T_k=0,\, a_k, \bar Y_{k-1}, l \big).
+$$
+
+Here, $f(y_k \mid a_k,\bar Y_{k-1},l)$ denotes the Poisson probability mass function with conditional mean (intensity)
+$\mu_k(a_k, \bar Y_{k-1}, l) = \mathbb{E}[Y_k \mid A_k, \bar Y_{k-1}, L]$.
+Together, these two models multiply to form a joint model for the terminal and recurrent event occurrence at a given interval.
 
 The functions in `BayCauRETM` implement the following models for the hazard and intensity, respectively:
-
 $$
 \begin{aligned}
-\text{logit}\,\lambda_k(a_k,\bar y_{k-1},l)=\beta_{0k}+l^\top\beta_L+y_{k-1}\beta_Y+\beta_A a_k, \\
-\log \mu_k(a_k, \bar y_{k-1}, l)=\theta_{0k}+l^\top\theta_L+y_{k-1}\theta_Y+\theta_A a_k,
+\text{logit}\,\lambda_k(a_k,\bar Y_{k-1},l)
+&= \beta_{0k} + l^\top \beta_L \\
+&\quad + y_{k-1}\beta_Y + \beta_A a_k, \\
+\log \mu_k(a_k, \bar Y_{k-1}, l)
+&= \theta_{0k} + l^\top \theta_L + y_{k-1}\theta_Y + \theta_A a_k.
 \end{aligned}
 $$
 
@@ -83,11 +102,98 @@ The time-varying intercepts $\{\beta_{0k}\}$ and $\{\theta_{0k}\}$ parameterize 
 
 ### Posterior inference and g-computation
 
-`BayCauRETM` conducts full posterior inference for the models and back-ends to Stan [@Stan2017] via the `rstan` package since the posterior is not available in closed form. Stan is a probabilistic programming language (PPL) that implements cutting edge Hamiltonian Monte Carlo methods to obtain posterior draws.
+`BayCauRETM` conducts full posterior inference for the joint models using Stan [@Stan2017] through the `rstan` interface, since the posterior distribution is not available in closed form. Stan is a probabilistic programming language that implements Hamiltonian Monte Carlo to generate posterior draws.
 
 For each parameter draw obtained from Stan, `BayCauRETM` simulates the joint death-recurrent process under $a(s)$ and $a(s')$ to obtain a posterior draw of $\Delta(s, s')$. Reporting over many draws yields posterior samples of $\Delta(s, s')$, as described by @Oganisian2024. The posterior mean and the 95% credible interval (2.5th and 97.5th percentiles) are reported.
 
-Detailed usage and example results are available on [GitHub](https://github.com/LnnnnYW/BayCauRETM) (see the [demo PDF](https://github.com/LnnnnYW/BayCauRETM/blob/master/inst/demo_code/demo.pdf)).
+# Quickstart
+
+Below we provide a minimal, copy-pastable example illustrating the core functionality of `BayCauRETM`: fitting a joint recurrent-event and terminal-event model and estimating causal effects under alternative treatment initiation strategies. A small example dataset is shipped with the package, allowing users to run the example without any external data dependencies.
+
+### Installation and setup
+
+We first install the development version of the package from GitHub and load the required libraries. For reproducibility, we also set a random seed.
+
+```r
+# install.packages("pak")
+pak::pak("LnnnnYW/BayCauRETM")
+
+library(BayCauRETM)
+library(dplyr)
+library(tidyr)
+
+set.seed(123)
+```
+
+### Data loading
+
+The package ships with a small example dataset used in the demonstration code. The dataset is stored in the package directory and can be loaded using `system.file()`. Loading this file creates a data frame named `df` in the workspace.
+
+```r
+# Load the example dataset shipped with the package
+rdata_path <- system.file("demo_code", "data.Rdata", package = "BayCauRETM")
+stopifnot(file.exists(rdata_path))
+load(rdata_path)  # loads an object named `df`
+```
+
+### Minimal preprocessing
+
+The data are assumed to be in long, person-interval format. For a fast illustrative run, we subset the data to a small number of subjects and perform minimal preprocessing. This includes ordering observations by subject and time, constructing a discrete time index, creating a lagged event-count variable, removing incomplete cases, and standardizing continuous covariates. These steps mirror the preprocessing required for real applications but are kept intentionally simple here.
+
+```r
+# Minimal preprocessing
+df_fit <- df %>%
+  filter(id %in% 1:50) %>%                 # subset for quickstart
+  arrange(id, k) %>%
+  mutate(k_fac = as.integer(factor(k, levels = sort(unique(k))))) %>%
+  group_by(id) %>%
+  mutate(lagYk = if ("lagYk" %in% names(.)) replace_na(lagYk, 0) else lag(Yk, default = 0)) %>%
+  ungroup() %>%
+  drop_na(Tk, Yk, Ak, L.1, L.2) %>%
+  mutate(
+    L.1 = as.numeric(scale(L.1)),
+    L.2 = as.numeric(scale(L.2))
+  )
+
+K <- length(unique(df_fit$k_fac))
+```
+
+### Model fitting
+
+We next fit the joint Bayesian model for the recurrent-event and terminal-event processes using the main function `fit_causal_recur()`. The user specifies the outcome models through standard R formula syntax, along with the relevant column names for subject ID, time index, treatment, and lagged history. Here we use a single core and suppress verbose output for speed.
+
+```r
+# Fit the joint recurrent + terminal event model (small settings for illustration)
+fit <- fit_causal_recur(
+  data      = df_fit,
+  K         = K,
+  id_col    = "id",
+  time_col  = "k_fac",
+  treat_col = "Ak",
+  lag_col   = "lagYk",
+  formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+  formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+  cores     = 1,
+  verbose   = FALSE
+)
+```
+### Causal effect estimation via g-computation
+
+Finally, we estimate causal effects corresponding to different treatment initiation strategies using Bayesian g-computation. In this example, we compare initiation at two different time points. The output summarizes posterior draws of the causal estimand, including point estimates and uncertainty intervals.
+
+```r
+# Bayesian g-computation for two treatment-start strategies
+gcomp <- g_computation(
+  fit_out = fit,
+  s_vec   = c(3, 6),   # start at time 3 vs 6
+  B       = 20,
+  cores   = 1
+)
+
+print(gcomp)
+```
+
+This quickstart demonstrates the full workflow of BayCauRETM, from data preparation and model fitting to causal effect estimation. Detailed usage and example results are available on [GitHub](https://github.com/LnnnnYW/BayCauRETM) (see the [demo PDF](https://github.com/LnnnnYW/BayCauRETM/blob/master/inst/demo_code/demo.pdf)).
 
 # Acknowledgements
 

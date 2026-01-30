@@ -10,7 +10,7 @@
 #'   is also required.
 #' @param pars_to_check Character vector of Stan parameter base names to diagnose.
 #'   Only names present in the fitted object are used. Default:
-#'   `c("beta0", "theta0", "beta1", "theta1", "thetaLag")`.
+#'   `c("beta0","betaL","theta0","thetaL","beta1","theta1","thetaLag")`.
 #' @param save_plots Logical. Index of whether to save the output plot. If `TRUE`,
 #'   save each trace plot as a PNG using `plot_prefix`.
 #' @param plot_prefix Character scalar. Filename prefix for saved plots (default `"traceplot_"`).
@@ -28,11 +28,11 @@
 #' You can pass either raw Stan base names (e.g., "beta0", "thetaLag") or the
 #' aliases below; matching is case-insensitive and allows partial keywords.
 #' Aliases:
-#' - "T-model": terminal-event block (beta0[]; baseline hazard, covariates, lag terms, time-baseline).
-#' - "Y-model": recurrent-event block (theta0[]; baseline rate, covariates, lag terms, time-baseline).
+#' - "T-model": terminal-event block (beta0[] and betaL; time-baseline and covariate effects).
+#' - "Y-model": recurrent-event block (theta0[] and thetaL; time-baseline and covariate effects).
+#' - "Lag": lag-kernel terms (thetaLag), when present.
 #' - "treatment_effect_T": treatment effect in the terminal model (beta1).
 #' - "treatment_effect_Y": treatment effect in the recurrent model (theta1).
-#' - "Lag": lag-kernel terms (thetaLag), when present.
 #'
 #' @examples
 #' \dontrun{
@@ -53,7 +53,7 @@
 
 
 mcmc_diagnosis <- function(fit_out,
-                           pars_to_check = c("beta0", "theta0", "beta1", "theta1", "thetaLag"),
+                           pars_to_check = c("beta0","betaL","theta0","thetaL","beta1","theta1","thetaLag"),
                            save_plots     = FALSE,
                            plot_prefix    = "traceplot_") {
 
@@ -94,11 +94,13 @@ mcmc_diagnosis <- function(fit_out,
   # trace-plots
   .title_pretty <- function(tag) {
     switch(tag,
-           "beta0"    = "T-model: covariates + lags + time-baseline",
-           "theta0"   = "Y-model: covariates + lags + time-baseline",
-           "beta1"    = "T-model: treatment_effect_T",
-           "theta1"   = "Y-model: treatment_effect_Y",
-           "thetaLag" = "Lag-kernel (theta_lag_extra)",
+           "beta0"    = "T-model: time baseline (beta0)",
+           "betaL"    = "T-model: covariate effects (betaL)",
+           "theta0"   = "Y-model: time baseline (theta0)",
+           "thetaL"   = "Y-model: covariate effects (thetaL)",
+           "beta1"    = "T-model: treatment_effect_T (beta1)",
+           "theta1"   = "Y-model: treatment_effect_Y (theta1)",
+           "thetaLag" = "Y-model: lag/history effects (thetaLag)",
            tag
     )
   }
