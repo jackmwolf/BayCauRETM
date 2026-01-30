@@ -35,9 +35,6 @@ if (use_multicore) {
 options(mc.cores = cores)
 rstan_options(auto_write = TRUE)
 
-warmup <- 500
-M      <- 500
-iter   <- warmup + M
 B      <- 50
 s_vec  <- c(3, 6, 9)
 ```
@@ -75,17 +72,20 @@ K <- length(unique(df_fit$k_fac))
 
 We now fit the joint model for the recurrent events and terminal process using Stan.
 
-We fit a joint Bayesian model for (i) the terminal process $T_k$ and (ii) the recurrent events $Y_k$, sharing the discrete time structure and history records. Each sub-model includes: the current treatment, lagged outcomes (e.g., $I(lagY_k^2)$), standardized covariates $(L.1, L.2)$, and a piecewise-constant baseline (time_baseline_T[k], time_baseline_Y[k]).
+We fit a joint Bayesian model for (i) the terminal process $T_k$ and (ii) the recurrent events $Y_k$, sharing the discrete time structure and history records. Each sub-model includes: the current treatment, lagged outcomes (e.g., $I(\text{lagY}_k^2)$), standardized covariates $(L.1, L.2)$, and a piecewise-constant baseline (time_baseline_T[k], time_baseline_Y[k]).
 
-We expose variable names in diagnostics and summaries as follows:
+Following Oganisian et al. (2024), we use $\beta$ to denote coefficients in the terminal (death) model and $\theta$ to denote coefficients in the recurrent-event model. We expose variable names in diagnostics and summaries as follows:
 
--   $\beta_{T:L.1},\ \beta_{T:L.2},\ \beta_{Y:L.1},\ \beta_{Y:L.2}$: covariate ($L.1$, $L.2$ here) effects in $T$/$Y$ mode
+- $\beta_{T:L.1},\ \beta_{T:L.2}$: covariate ($L.1$, $L.2$ here) effects in the terminal ($T$) model.
 
--   $\theta_{T,\text{lag}:I(\text{lagYk}^2)},\ \theta_{Y,\text{lag}:I(\text{lagYk}^2)}$: coefficients for lagged outcome features.
+- $\theta_{Y:L.1},\ \theta_{Y:L.2}$: covariate ($L.1$, $L.2$ here) effects in the recurrent-event ($Y$) model.
 
--   time_baseline_T[j], time_baseline_Y[j]: $j$-th time-interval baselines capturing secular time trends.
+- $\theta_{Y,\text{lag}:I(\text{lagYk}^2)}$: coefficients for lagged outcome features in the recurrent-event model.
 
--   treatment_effect_T, treatment_effect_Y: treatment effects for terminal and recurrent processes.
+- time_baseline_T[j], time_baseline_Y[j]: $j$-th time-interval baselines capturing secular time trends.
+
+- treatment_effect_T, treatment_effect_Y: treatment effects for the terminal and recurrent processes, respectively.
+
 
 ```{r}
 # Stan fit
@@ -107,7 +107,7 @@ fit <- fit_causal_recur(
 
 Evaluate convergence and identify any problematic chains. We report R-hat (target ≈ 1.00), effective sample size (should be large), and show traceplots grouped by model block.
 By default, the mcmc_diagnosis() and its plot function checks multiple model blocks, including the T-model, Y-model, treatment effects, and lag terms. However, for simplicity and clarity, users can focus on a specific component as follows.
-Specifically, "T-model" refers to the baseline hazard and covariate effects in the terminal event model, while "Y-model" targets the same components in the recurrent event model. "treatment_effect_T" and "treatment_effect_Y" refer to the treatment effects in the T-model and Y-model, respectively. "Lag" corresponds to the lag kernel terms that capture dependencies across time. These names can be supplied directly to the pars argument in the plot() call, and matching is case-insensitive and supports partial keyword matching for convenience.
+Specifically, "T-model" refers to the baseline hazard and covariate effects in the terminal event model, while "Y-model" targets the same components in the recurrent event model. "treatment_effect_T" and "treatment_effect_Y" refer to the treatment effects in the T-model and Y-model, respectively. "Lag" corresponds to the lag kernel terms that capture dependencies across time. These names can be supplied directly to the pars argument in the plot() call, and matching is case-insensitive and supports partial keyword matching for convenience. P corresponds to the columns of the design matrices L_Tk and L_Yk constructed from formula_T and formula_Y.
 
 ```{r}
 # MCMC Diagnosis
@@ -115,6 +115,23 @@ rstan::check_hmc_diagnostics(fit$stan_fit)
 diag <- mcmc_diagnosis(fit)
 plot(diag, pars = "T-model") 
 ```
+
+```{r}
+# Extract posterior draws for covariate coefficients (beta_L and theta_L)
+post <- rstan::extract(fit$stan_fit)
+
+# Covariate coefficient draws (iterations * P)
+betaL_draws  <- post$betaL
+thetaL_draws <- post$thetaL
+
+# Posterior means and 95% Credible Interval
+betaL_sum <- apply(betaL_draws, 2, function(x) c(mean=mean(x), quantile(x, c(.025,.975))))
+thetaL_sum <- apply(thetaL_draws, 2, function(x) c(mean=mean(x), quantile(x, c(.025,.975))))
+
+betaL_sum
+thetaL_sum
+```
+
 
 ## 5. G-Computation
 
@@ -149,7 +166,8 @@ $$
 \Delta^{(m)}(s)=\theta_s^{(m)}(K)-\theta_{K+1}^{(m)}(K).
 $$
 
-Posterior draws $\{\Delta^{(m)}(s)\}_m$ are summarized by their mean and 95% credible interval.
+Posterior draws $\{\Delta^{(m)}(s)\}_m$ are summarized by their mean and 95% credible interval. For clarity, although we construct a baseline covariate data frame below for illustration, the g_computation() function performs marginalization over baseline covariates internally using Bayesian bootstrap weights, and this object is not explicitly passed to the function.
+
 
 ```{r}
 baseline_df <- fit$data_preprocessed %>%
@@ -157,6 +175,10 @@ baseline_df <- fit$data_preprocessed %>%
   slice_min(order_by = k_idx, n = 1) %>%
   arrange(pat_id) %>%
   ungroup()
+
+# Note: baseline_df is created for illustration only.
+# The g_computation() function marginalizes over baseline covariates internally
+# via Bayesian bootstrap weights and does not require this object as input.
 
 gcomp <- g_computation(
   fit_out = fit,

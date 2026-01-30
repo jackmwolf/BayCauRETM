@@ -1,8 +1,9 @@
 // Model：
 // If in the kth interval, T_k-1=0 & C_k-1=0: T_obs ~ Bernoulli_logit( beta0[k] + X_T·beta_X + beta_Y*Y_prev + beta_A*A )
-// If T_obs == 0，then Y_obs ~ Poisson_log( gamma0[k] + X_Y·gamma_X + gamma_Y*Y_prev + gamma_A*A )
-//    where beta0[1:K], gamma0[1:K] follows gAR(1) smoothing prior
-//    X_T, X_Y: covariates matrix
+// If T_obs == 0，then // Y_obs ~ Poisson_log( theta0[k] + X_Y * thetaL + Lag_Yk * thetaLag + theta1 * A )
+//  where beta0[1:K], theta0[1:K] follow gAR(1) smoothing priors
+//  X_T, X_Y: covariates matrix
+// (Some earlier drafts used gamma for the recurrent process; here we use theta to match the manuscript.)
 
 data {
   int<lower=0> NY1;

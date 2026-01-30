@@ -52,6 +52,67 @@ The following R packages are required for `BayCauRETM`:
 These are listed in the `Imports` field of the `DESCRIPTION` file and
 will be installed automatically with the package.
 
+## A Quickstart
+
+```{r}
+## Quickstart
+
+# install.packages("pak")
+pak::pak("LnnnnYW/BayCauRETM")
+
+library(BayCauRETM)
+library(dplyr)
+library(tidyr)
+
+set.seed(42)
+
+# Load the example dataset shipped with the package
+rdata_path <- system.file("demo_code", "data.Rdata", package = "BayCauRETM")
+stopifnot(file.exists(rdata_path))
+load(rdata_path)  # loads an object named `df`
+
+# Minimal preprocessing (subset for a fast run)
+df_fit <- df %>%
+  filter(id %in% 1:50) %>%                 # subset for quickstart
+  arrange(id, k) %>%
+  mutate(k_fac = as.integer(factor(k, levels = sort(unique(k))))) %>%
+  group_by(id) %>%
+  mutate(lagYk = if ("lagYk" %in% names(.)) replace_na(lagYk, 0) else lag(Yk, default = 0)) %>%
+  ungroup() %>%
+  drop_na(Tk, Yk, Ak, L.1, L.2) %>%
+  mutate(
+    L.1 = as.numeric(scale(L.1)),
+    L.2 = as.numeric(scale(L.2))
+  )
+
+K <- length(unique(df_fit$k_fac))
+
+# Fit the joint recurrent + terminal event model (small settings for illustration)
+fit <- fit_causal_recur(
+  data      = df_fit,
+  K         = K,
+  id_col    = "id",
+  time_col  = "k_fac",
+  treat_col = "Ak",
+  lag_col   = "lagYk",
+  formula_T = Tk ~ Ak + I(lagYk^2) + L.1 + L.2,
+  formula_Y = Yk ~ Ak + I(lagYk^2) + L.1 + L.2,
+  cores     = 1,
+  verbose   = FALSE
+)
+
+# Bayesian g-computation for two treatment-start strategies
+gcomp <- g_computation(
+  fit_out = fit,
+  s_vec   = c(3, 6),   # start at time 3 vs 6
+  B       = 20,
+  cores   = 1
+)
+
+print(gcomp)
+
+```
+
 ## Documentation and Example
 
 The [paper](https://academic.oup.com/biometrics/article/80/4/ujae145/7914699) associated with this package contains the statistical details of the model as well as a detailed walk-through demonstration. 
@@ -69,6 +130,15 @@ Pull requests are always welcome!
 ## Citation
 
 If you use **BayCauRETM**, please cite:
+
+## Community Guidelines
+
+Please report bugs by opening an
+[issue](https://github.com/LnnnnYW/BayCauRETM/issues).  
+If you have a question regarding the usage of **BayCauRETM**, please open a
+[discussion](https://github.com/LnnnnYW/BayCauRETM/discussions).  
+If you would like to contribute to the package, please open a
+[pull request](https://github.com/LnnnnYW/BayCauRETM/pulls).
 
 ## Contact
 
