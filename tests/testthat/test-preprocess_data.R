@@ -66,4 +66,20 @@ test_that("preprocess_data conflict input", {
   expect_error(preprocess_data(df2, K), "df must not contain any missing values")
 })
 
+#no data after censoring and only one censored time point for Ck
+test_that("preprocess_data no data after censoring", {
+  df2 <- preprocess_data(df, K)$processed_df
+  #for every subject, only the last time point Ck can be 1
+  violations_after_censoring <- df2 %>%
+    group_by(id) %>%
+    arrange(k_idx) %>%
+    mutate(censored_seen = cummax(Ck)) %>%
+    filter(censored_seen == 1 & Ck == 0)
+  multiple_censoring <- df2 %>%
+    group_by(id) %>%
+    summarise(n_censored = sum(Ck == 1)) %>%
+    filter(n_censored > 1)
+  expect_equal(nrow(violations_after_censoring), 0)
+  expect_equal(nrow(multiple_censoring), 0)
+})
 
