@@ -427,6 +427,60 @@ test_that("summary.causal_recur_fit works", {
 test_that("summary.causal_recur_fit no parameter", {
   expect_error(summary(fit, pars_to_report = "L1"), "Error extracting summary for parameters L1")
 })
+#test ci
+test_that("summary.causal_recur_fit: ci validation works", {
+  # Valid ci should work and return something (your function returns a data.frame invisibly)
+  summ <- summary(fit, ci = c(0.05, 0.95))
+  expect_s3_class(summ, "data.frame")
+  expect_true(all(c("Parameter", "Mean", "Lower", "Upper") %in% names(summ)))
+
+  # Not numeric
+  expect_error(
+    summary(fit, ci = c("0.025", "0.975")),
+    "'ci' must be a numeric length-2 vector"
+  )
+
+  # Wrong length
+  expect_error(
+    summary(fit, ci = 0.95),
+    "'ci' must be a numeric length-2 vector"
+  )
+  expect_error(
+    summary(fit, ci = c(0.025, 0.5, 0.975)),
+    "'ci' must be a numeric length-2 vector"
+  )
+
+  # NA present
+  expect_error(
+    summary(fit, ci = c(NA_real_, 0.975)),
+    "'ci' must be a numeric length-2 vector"
+  )
+
+  # Out of (0,1)
+  expect_error(
+    summary(fit, ci = c(0, 0.975)),
+    "'ci' must be within \\(0,1\\)"
+  )
+  expect_error(
+    summary(fit, ci = c(0.025, 1)),
+    "'ci' must be within \\(0,1\\)"
+  )
+  expect_error(
+    summary(fit, ci = c(-0.1, 0.9)),
+    "'ci' must be within \\(0,1\\)"
+  )
+
+  # Bad order / equal
+  expect_error(
+    summary(fit, ci = c(0.975, 0.025)),
+    "ci\\[1\\] < ci\\[2\\]"
+  )
+  expect_error(
+    summary(fit, ci = c(0.5, 0.5)),
+    "ci\\[1\\] < ci\\[2\\]"
+  )
+})
+
 
 #test print
 test_that("print.causal_recur_fit works", {

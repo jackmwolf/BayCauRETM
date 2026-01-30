@@ -336,20 +336,38 @@ print.causal_recur_fit <- function(x, ...) {
 #' @describeIn causal_recur_fit Summarize posterior parameter estimates.
 #' @param object A `causal_recur_fit` object.
 #' @param pars_to_report Character vector of parameter names (regex allowed).
+#' @param ci Numeric vector of length 2. Credible interval bounds (default `c(0.025, 0.975)`).
 #' @method summary causal_recur_fit
 #' @export
 
 summary.causal_recur_fit <- function(object,
                                      pars_to_report = c("beta1", "theta1", "thetaLag",
                                                         "betaL[1]", "thetaL[1]"),
+                                     ci = c(0.025, 0.975),
+                                     digits = 4,
                                      ...) {
+
+  # Validate ci
+  if (!is.numeric(ci) || length(ci) != 2 || anyNA(ci)) {
+    stop("'ci' must be a numeric length-2 vector, e.g. c(0.025, 0.975).")
+  }
+  if (any(ci <= 0) || any(ci >= 1) || ci[1] >= ci[2]) {
+    stop("'ci' must be within (0,1) and satisfy ci[1] < ci[2].")
+  }
+
   stan_fit <- object$stan_fit
-  sum_obj  <- tryCatch(rstan::summary(stan_fit, pars = pars_to_report, ...),
-                       error = function(e) {
-                         stop("Error extracting summary for parameters ",
-                                 paste(pars_to_report, collapse = ", "))
-                         NULL
-                       })
+
+  # Ask rstan for the quantiles the user wants
+  sum_obj <- tryCatch(
+    rstan::summary(stan_fit, pars = pars_to_report, probs = ci, ...),
+    error = function(e) {
+      stop(
+        "Error extracting summary for parameters ",
+        paste(pars_to_report, collapse = ", "),
+        "\nOriginal error: ", conditionMessage(e)
+      )
+    }
+  )
 
   if (is.null(sum_obj) || is.null(sum_obj$summary)) {
     cat("No summary available for specified parameters.\n")
@@ -357,17 +375,33 @@ summary.causal_recur_fit <- function(object,
   }
 
   sum_stan <- sum_obj$summary
+
+  # rstan names these columns like "2.5%" or "95%" etc.
+  ci_cols <- paste0(format(ci * 100, trim = TRUE, scientific = FALSE), "%")
+
+  missing_cols <- setdiff(ci_cols, colnames(sum_stan))
+  if (length(missing_cols) > 0) {
+    stop(
+      "Expected CI columns not found in rstan summary: ",
+      paste(missing_cols, collapse = ", "),
+      "\nAvailable columns: ",
+      paste(colnames(sum_stan), collapse = ", ")
+    )
+  }
+
   df <- data.frame(
     Parameter = rownames(sum_stan),
-    Mean      = round(sum_stan[, "mean"], 4),
-    `2.5%`    = round(sum_stan[, "2.5%"], 4),
-    `97.5%`   = round(sum_stan[, "97.5%"], 4),
+    Mean      = round(sum_stan[, "mean"], digits),
+    Lower     = round(sum_stan[, ci_cols[1]], digits),
+    Upper     = round(sum_stan[, ci_cols[2]], digits),
     row.names = NULL,
     stringsAsFactors = FALSE
   )
+
   print(df, row.names = FALSE)
   invisible(df)
 }
+
 
 #' @describeIn causal_recur_fit Display MCMC diagnostic guidance (no plot produced).
 #' @param x A `causal_recur_fit` object.
