@@ -333,7 +333,7 @@ test_that("fit_causal_recur missing required columns", {
     cores     = 1,
     iter      = 500,
     verbose   = TRUE
-  ), "Lag column 'lagYk' not found")
+  ), "Columns not found: lagYk")
 })
 
 test_that("fit_causal_recur missing required columns", {
