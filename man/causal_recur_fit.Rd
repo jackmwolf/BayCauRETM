@@ -31,6 +31,8 @@ fit_causal_recur(
 \method{summary}{causal_recur_fit}(
   object,
   pars_to_report = c("beta1", "theta1", "thetaLag", "betaL[1]", "thetaL[1]"),
+  ci = c(0.025, 0.975),
+  digits = 4,
   ...
 )
 
@@ -90,6 +92,11 @@ the previous interval outcome; otherwise the input is left unchanged. Default "l
 \item{object}{A \code{causal_recur_fit} object.}
 
 \item{pars_to_report}{Character vector of parameter names (regex allowed).}
+
+\item{ci}{Numeric vector of length 2. Credible interval bounds (default \code{c(0.025, 0.975)}).}
+
+\item{digits}{minimal number of \emph{significant} digits, see
+    \code{\link[base]{print.default}}.}
 }
 \value{
 An object of class \code{causal_recur_fit} (list) with elements

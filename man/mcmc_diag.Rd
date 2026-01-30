@@ -11,7 +11,7 @@
 \usage{
 mcmc_diagnosis(
   fit_out,
-  pars_to_check = c("beta0", "theta0", "beta1", "theta1", "thetaLag"),
+  pars_to_check = c("beta0", "betaL", "theta0", "thetaL", "beta1", "theta1", "thetaLag"),
   save_plots = FALSE,
   plot_prefix = "traceplot_"
 )
@@ -29,7 +29,7 @@ is also required.}
 
 \item{pars_to_check}{Character vector of Stan parameter base names to diagnose.
 Only names present in the fitted object are used. Default:
-\code{c("beta0", "theta0", "beta1", "theta1", "thetaLag")}.}
+\code{c("beta0","betaL","theta0","thetaL","beta1","theta1","thetaLag")}.}
 
 \item{save_plots}{Logical. Index of whether to save the output plot. If \code{TRUE},
 save each trace plot as a PNG using \code{plot_prefix}.}
@@ -67,11 +67,11 @@ You can pass either raw Stan base names (e.g., "beta0", "thetaLag") or the
 aliases below; matching is case-insensitive and allows partial keywords.
 Aliases:
 \itemize{
-\item "T-model": terminal-event block (beta0[]; baseline hazard, covariates, lag terms, time-baseline).
-\item "Y-model": recurrent-event block (theta0[]; baseline rate, covariates, lag terms, time-baseline).
+\item "T-model": terminal-event block (beta0[] and betaL; time-baseline and covariate effects).
+\item "Y-model": recurrent-event block (theta0[] and thetaL; time-baseline and covariate effects).
+\item "Lag": lag-kernel terms (thetaLag), when present.
 \item "treatment_effect_T": treatment effect in the terminal model (beta1).
 \item "treatment_effect_Y": treatment effect in the recurrent model (theta1).
-\item "Lag": lag-kernel terms (thetaLag), when present.
 }
 }
 \section{Methods (by generic)}{
