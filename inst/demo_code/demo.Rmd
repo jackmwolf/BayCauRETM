@@ -184,7 +184,7 @@ gcomp <- g_computation(
   fit_out = fit,
   s_vec   = s_vec,
   B       = B,
-  cores   = cores
+  cores   = 1
 )
 
 print(gcomp)
