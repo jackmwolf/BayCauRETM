@@ -429,7 +429,6 @@ test_that("summary.causal_recur_fit no parameter", {
 })
 #test ci
 test_that("summary.causal_recur_fit: ci validation works", {
-  # Valid ci should work and return something (your function returns a data.frame invisibly)
   summ <- summary(fit, ci = c(0.05, 0.95))
   expect_s3_class(summ, "data.frame")
   expect_true(all(c("Parameter", "Mean", "Lower", "Upper") %in% names(summ)))
