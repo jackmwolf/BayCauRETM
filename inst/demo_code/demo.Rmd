@@ -23,7 +23,7 @@ This Markdown of the Bayesian framework was proposed by Oganisian et al. (2024) 
 
 ## 1. Setup
 
-We configure Stan and set parallelization options for efficient MCMC workflow. We fix the random seed, enable parallel sampling, and set Hamiltonian Monte Carlo controls. The defaults (warmup = 500, M (posterior draws) = 500, 4 chains) are modest for illustration.
+We configure Stan and set parallelization options for efficient MCMC workflow. We fix the random seed, enable parallel sampling, and set Hamiltonian Monte Carlo controls. Stan uses warmup internally and excludes warmup draws from the posterior sample used for inference, and all summaries below are computed from the post-warmup draws (as returned by `rstan::extract()`)
 
 ```{r}
 use_multicore <- TRUE   # FALSE for single core
